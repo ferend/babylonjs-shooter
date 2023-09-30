@@ -1,2 +1,1 @@
-# personal-babylonjs-boilerplate
-My custom babylonjs boilerplate
+# babylonjs-shooter
