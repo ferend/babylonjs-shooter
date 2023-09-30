@@ -1,16 +1,12 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import {
-  Engine,
-  Scene,
-  Vector3,
-  Color3,
-} from "@babylonjs/core";
+import { Engine, Scene, Vector3, Color3 } from "@babylonjs/core";
 import Player from "./scripts/Player";
 import cannon from "cannon";
-import GameEnvironment from "./scripts/gameEnvironment"
-import PlayerCamera from "./scripts/playerCamera"
+import GameEnvironment from "./scripts/gameEnvironment";
+import PlayerCamera from "./scripts/playerCamera";
+import PlayerGun from "./scripts/playerGun";
 
 class App {
   constructor() {
@@ -23,18 +19,18 @@ class App {
 
     // initialize babylon scene and engine
     var engine = new Engine(canvas, true);
-    
+
     var scene = new Scene(engine);
-    scene.ambientColor = new Color3(1,1,1);
-    scene.gravity = new Vector3(0, -.75, 0); 
-    scene.collisionsEnabled = true;
     window.CANNON = cannon;
-    scene.enablePhysics();
+    scene.enablePhysics(new Vector3(0, -9.81, 0)); // You can adjust the gravity value as needed
+    scene.ambientColor = new Color3(1, 1, 1);
+    scene.collisionsEnabled = true;
 
     var camera = new PlayerCamera(scene, canvas);
-    const gameEnvironment = new GameEnvironment(scene);
+    new GameEnvironment(scene);
     const player = new Player(scene, camera);
-
+    const playerGun = new PlayerGun(scene);
+    
     // hide/show the Inspector
     window.addEventListener("keydown", (ev) => {
       // Shift+Ctrl+Alt+I
@@ -47,22 +43,48 @@ class App {
       }
     });
 
-    var isLocked = false;
+    let isLocked: boolean = false;
 
-    scene.onPointerDown = function (evt) {
-		
-      //true/false check if we're locked, faster than checking pointerlock on each single click.
+    scene.onPointerDown = (evt: PointerEvent) => {
       if (!isLocked) {
-        canvas.requestPointerLock = canvas.requestPointerLock || canvas.msRequestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
-        if (canvas.requestPointerLock) {
-          canvas.requestPointerLock();
+        const canvas = scene.getEngine().getRenderingCanvas();
+        const requestPointerLock =
+          canvas.requestPointerLock ||
+          canvas.msRequestPointerLock ||
+          canvas.mozRequestPointerLock ||
+          canvas.webkitRequestPointerLock;
+    
+        if (requestPointerLock) {
+          requestPointerLock.call(canvas);
         }
       }
-      
-      //continue with shooting requests or whatever :P
-      //evt === 1 (mouse wheel click (not scrolling))
-      //evt === 2 (right mouse click)
+      else {
+        playerGun.calculateShoot(scene,camera,player.playerWrapper,player.characterHeight);
+      }
     };
+    
+    // Event listener when the pointerlock is updated (or removed by pressing ESC for example).
+    const pointerlockchange = () => {
+      const controlEnabled =
+        document.pointerLockElement ||
+        null;
+    
+      // If the user is already locked
+      if (!controlEnabled) {
+        // camera.detachControl(canvas);
+        isLocked = false;
+      } else {
+        // camera.attachControl(canvas);
+        isLocked = true;
+      }
+    };
+    
+    
+    document.addEventListener("pointerlockchange", pointerlockchange, false);
+    document.addEventListener("mspointerlockchange", pointerlockchange, false);
+    document.addEventListener("mozpointerlockchange", pointerlockchange, false);
+    document.addEventListener("webkitpointerlockchange", pointerlockchange, false);
+    player.listenEvents(canvas);
 
     // run the main render loop
     engine.runRenderLoop(() => {
