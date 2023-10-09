@@ -19,6 +19,7 @@ class Player extends BABYLON.Mesh {
   private camera: BABYLON.FreeCamera;
   private walkSpeed = 10;
   private runSpeed = 15;
+  public playerScore = 0;
 
   constructor(scene: BABYLON.Scene, camera: BABYLON.FreeCamera) {
     super("hero");
@@ -189,6 +190,11 @@ class Player extends BABYLON.Mesh {
       new BABYLON.Vector3(1, 20, -1),
       this.getAbsolutePosition()
     );
+  }
+
+  public updatePlayerScore(scoreText: any): void {
+    this.playerScore += 1;
+    scoreText.text = "Score: " + this.playerScore;
   }
 
   private degToRad(deg): number {

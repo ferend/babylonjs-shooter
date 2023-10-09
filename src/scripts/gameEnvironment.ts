@@ -100,7 +100,7 @@ class GameEnvironment {
     private createSphere(scene, mat): void {
         var y = 200;
         for (var index = 0; index < 50; index++) {
-            var sphere = BABYLON.Mesh.CreateSphere("Sphere0", 16, 3, scene);
+            var sphere = BABYLON.CreateSphere("Sphere", { diameter: 3, segments :16 });
             sphere.material = mat;
             sphere.position = new BABYLON.Vector3(Math.random() * 20 - 10, y, Math.random() * 10 - 5);
             sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1 }, scene);
